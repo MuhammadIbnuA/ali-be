@@ -2,7 +2,6 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const app = express();
 const port = 4545; // Anda dapat mengubah nomor port ini jika diperlukan
@@ -117,8 +116,9 @@ app.post('/register', async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: 'User with that email already exists' });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ username, email, password: hashedPassword });
+    // WARNING: Storing passwords as plain text is NOT SECURE.
+    // DO NOT USE THIS IN A REAL-WORLD APPLICATION.
+    const user = new User({ username, email, password });
     await user.save();
     res.json({ message: 'User registered successfully' });
   } catch (error) {
@@ -134,10 +134,13 @@ app.post('/login', async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
+
+    // WARNING: Storing passwords as plain text is NOT SECURE.
+    // DO NOT USE THIS IN A REAL-WORLD APPLICATION.
+    if (user.password !== password) {
       return res.status(401).json({ error: 'Invalid password' });
     }
+
     res.json({ message: 'Login successful' });
   } catch (error) {
     console.error('Error logging in user:', error);
